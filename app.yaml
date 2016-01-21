@@ -1,0 +1,11 @@
+# [START runtime]
+module: default
+runtime: custom
+vm: true
+# [END runtime]
+manual_scaling:
+  instances: 1
+beta_settings:
+    cloud_sql_instances: <project id>:us-central1:wordpress
+health_check:
+  enable_health_check: True
