@@ -1,7 +1,7 @@
 FROM php:5.6-apache
 
-#ENV WORDPRESS_DB_HOST="<ip address of cloud sql instance>"
-ENV WORDPRESS_DB_HOST="localhost:/cloudsql/<your-project-id>:us-central1:wordpress"
+# ENV WORDPRESS_DB_HOST="your-ip-address:3306"
+ENV WORDPRESS_DB_HOST="localhost:/cloudsql/<your-project-id>:<your-region>:<your-cloudsql-instance-name>"
 ENV WORDPRESS_DB_USER="wordpress"
 ENV WORDPRESS_DB_PASSWORD="yourpassword"
 ENV WORDPRESS_DB_NAME="wordpress"
@@ -11,7 +11,7 @@ ENV WORDPRESS_DEBUG="true"
 RUN a2enmod rewrite expires
 
 # install the PHP extensions we need
-RUN apt-get update && apt-get install -y libpng12-dev libjpeg-dev && rm -rf /var/lib/apt/lists/* \
+RUN apt-get update && apt-get install -y libpng12-dev libjpeg-dev unzip && rm -rf /var/lib/apt/lists/* \
 	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
 	&& docker-php-ext-install gd mysqli opcache
 
@@ -23,7 +23,16 @@ RUN curl -o wordpress.tar.gz -SL https://wordpress.org/wordpress-${WORDPRESS_VER
 	&& echo "$WORDPRESS_SHA1 *wordpress.tar.gz" | sha1sum -c - \
 	&& tar -xzf wordpress.tar.gz -C /usr/src/ \
 	&& rm wordpress.tar.gz \
+	&& curl -o google-app-engine.latest-stable.zip -SL https://downloads.wordpress.org/plugin/google-app-engine.latest-stable.zip \
+	&& unzip -q -d /usr/src/wordpress/wp-content/plugins google-app-engine.latest-stable.zip \
 	&& chown -R www-data:www-data /usr/src/wordpress
+
+# install PHP GAE SDK
+RUN curl -o /tmp/google_appengine_1.9.31.zip -SL https://storage.googleapis.com/appengine-sdks/featured/google_appengine_1.9.31.zip \
+ && unzip -q -d /tmp /tmp/google_appengine_1.9.31.zip \
+ && cp -r /tmp/google_appengine/php/sdk/* /usr/local/lib/php/ \
+ && rm -f /tmp/google_appengine_1.9.31.zip \
+ && rm -rf /tmp/google_appengine
 
 # copy updated apache configuration
 # Listen to port 8080 instead of 80
