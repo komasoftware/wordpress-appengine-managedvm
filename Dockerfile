@@ -1,5 +1,9 @@
 FROM php:5.6-apache
 
+RUN docker-php-ext-configure bcmath
+RUN docker-php-ext-install bcmath
+
+
 # ENV WORDPRESS_DB_HOST="your-ip-address:3306"
 ENV WORDPRESS_DB_HOST="localhost:/cloudsql/<your-project-id>:<your-region>:<your-cloudsql-instance-name>"
 ENV WORDPRESS_DB_USER="wordpress"
@@ -11,7 +15,7 @@ ENV WORDPRESS_DEBUG="true"
 RUN a2enmod rewrite expires
 
 # install the PHP extensions we need
-RUN apt-get update && apt-get install -y libpng12-dev libjpeg-dev unzip && rm -rf /var/lib/apt/lists/* \
+RUN apt-get update && apt-get install -y libpng12-dev libjpeg-dev unzip nano php-apc && rm -rf /var/lib/apt/lists/* \
 	&& docker-php-ext-configure gd --with-png-dir=/usr --with-jpeg-dir=/usr \
 	&& docker-php-ext-install gd mysqli opcache
 
@@ -33,10 +37,12 @@ RUN curl -o /tmp/google_appengine_1.9.31.zip -SL https://storage.googleapis.com/
  && cp -r /tmp/google_appengine/php/sdk/* /usr/local/lib/php/ \
  && rm -f /tmp/google_appengine_1.9.31.zip \
  && rm -rf /tmp/google_appengine
+COPY docker-appengine.ini /usr/local/etc/php/conf.d/appengine.ini
 
 # copy updated apache configuration
 # Listen to port 8080 instead of 80
 COPY docker-apache2.conf /etc/apache2/apache2.conf
+
 
 # startup and health check responses
 RUN mkdir -p /var/www/html/_ah
